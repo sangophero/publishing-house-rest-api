@@ -20,7 +20,7 @@ const (
 func (app *App) GetBookByISBNHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
-	if !verifyISBN(vars["isbn"], vars["isbn_type"]) {
+	if !verifyISBN(vars["isbn"]) {
 		http.Error(w, StatusBadRequestMessage, http.StatusBadRequest)
 		return
 	}
@@ -74,7 +74,6 @@ func (app *App) GetBooksListHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) AddBookHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
 	var book *Book
 
 	if err := json.NewDecoder(r.Body).Decode(&book); err != nil {
@@ -82,7 +81,7 @@ func (app *App) AddBookHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !book.verify(vars["isbn_type"]) {
+	if !book.verify() {
 		http.Error(w, StatusBadRequestMessage, http.StatusBadRequest)
 		return
 	}
@@ -103,7 +102,7 @@ func (app *App) AddBookHandler(w http.ResponseWriter, r *http.Request) {
 func (app *App) DeleteBookHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
-	if !verifyISBN(vars["isbn"], vars["isbn_type"]) {
+	if !verifyISBN(vars["isbn"]) {
 		http.Error(w, StatusBadRequestMessage, http.StatusBadRequest)
 		return
 	}
@@ -136,7 +135,6 @@ func (app *App) DeleteBookHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) UpdateBookHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
 	var book *Book
 
 	if err := json.NewDecoder(r.Body).Decode(&book); err != nil {
@@ -144,12 +142,25 @@ func (app *App) UpdateBookHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !book.verify(vars["isbn_type"]) {
+	if !book.verify() {
 		http.Error(w, StatusBadRequestMessage, http.StatusBadRequest)
 		return
 	}
 
-	err := app.DB.Where("isbn = ?", book.ISBN).Save(&book).Error
+	err := app.DB.First(&Book{}, "isbn = ?", book.ISBN).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		http.Error(w, StatusNotFoundMessage, http.StatusNotFound)
+		return
+	}
+
+	if err != nil {
+		log.Fatal(err.Error())
+		http.Error(w, StatusInternalServerErrorMessage, http.StatusInternalServerError)
+		return
+	}
+
+	err = app.DB.Where("isbn = ?", book.ISBN).Save(&book).Error
 
 	if err != nil {
 		log.Println(err.Error())

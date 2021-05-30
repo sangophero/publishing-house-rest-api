@@ -1,13 +1,10 @@
 package main
 
-import (
-	"github.com/asaskevich/govalidator"
-	"strconv"
-)
+import "github.com/asaskevich/govalidator"
 
 const (
-	ISBNType10 = 10
-	ISBNType13 = 13
+	ISBNType10 = 13
+	ISBNType13 = 17
 )
 
 type Book struct {
@@ -20,8 +17,8 @@ type Book struct {
 	Status      bool
 }
 
-func (book *Book) verify(isbn_type_str string) bool {
-	if !verifyISBN(book.ISBN, isbn_type_str) {
+func (book *Book) verify() bool {
+	if !verifyISBN(book.ISBN) {
 		return false
 	}
 
@@ -29,14 +26,8 @@ func (book *Book) verify(isbn_type_str string) bool {
 	return r
 }
 
-func verifyISBN(isbn, isbn_type_str string) bool {
-	isbn_type, err := strconv.ParseUint(isbn_type_str, 10, 32)
-
-	if err != nil {
-		return false
-	}
-
-	switch isbn_type {
+func verifyISBN(isbn string) bool {
+	switch len(isbn) {
 	default:
 		return false
 	case ISBNType10:

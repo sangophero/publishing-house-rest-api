@@ -32,11 +32,11 @@ func main() {
 	r := mux.NewRouter()
 	app := &App{r, db}
 
-	r.HandleFunc("/book/{isbn}/{isbn_type}", app.GetBookByISBNHandler).Methods("GET")
-	r.HandleFunc("/book/{isbn}/{isbn_type}", app.DeleteBookHandler).Methods("DELETE")
+	r.HandleFunc("/book/{isbn}", app.GetBookByISBNHandler).Methods("GET")
+	r.HandleFunc("/book/{isbn}", app.DeleteBookHandler).Methods("DELETE")
 	r.HandleFunc("/books", app.GetBooksListHandler).Methods("GET")
-	r.HandleFunc("/book/{isbn_type}", app.AddBookHandler).Methods("POST")
-	r.HandleFunc("/book/{isbn_type}", app.UpdateBookHandler).Methods("PUT")
+	r.HandleFunc("/book", app.AddBookHandler).Methods("POST")
+	r.HandleFunc("/book", app.UpdateBookHandler).Methods("PUT")
 
 	srv := &http.Server{
 		Handler:      app.Router,

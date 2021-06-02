@@ -35,5 +35,4 @@ func verifyISBN(isbn string) bool {
 	case ISBNType13:
 		return govalidator.IsISBN13(isbn)
 	}
-	return true
 }

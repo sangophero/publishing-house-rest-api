@@ -15,6 +15,8 @@ const (
 	StatusNotFoundMessage             = "Not Found"
 	StatusInternalServerErrorMessage  = "Internal Server Error"
 	StatusBadRequestMessage           = "Bad Request"
+	StatusConflictMessage             = "Conflict"
+	BlankJSON                         = "{}"
 )
 
 func (app *App) GetBookByISBNHandler(w http.ResponseWriter, r *http.Request) {
@@ -27,10 +29,11 @@ func (app *App) GetBookByISBNHandler(w http.ResponseWriter, r *http.Request) {
 
 	var book *Book
 
-	err := app.DB.First(&book, "isbn = ?", vars["isbn"]).Error //app.DB.Where("isbn = ?", vars["isbn"]).First(&book).Error
+	err := app.DB.First(&book, "isbn = ?", vars["isbn"]).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		http.Error(w, StatusNotFoundMessage, http.StatusNotFound)
+		w.WriteHeader(http.StatusNoContent)
+		w.Write([]byte(BlankJSON))
 		return
 	}
 
@@ -88,15 +91,17 @@ func (app *App) AddBookHandler(w http.ResponseWriter, r *http.Request) {
 
 	result := app.DB.Create(&book)
 
-	if strings.Contains(result.Error.Error(), UniqueConstraintFaileErrorMessage) {
-		http.Error(w, StatusBadRequestMessage, http.StatusBadRequest)
-		return
+	if result.Error != nil {
+		if strings.Contains(result.Error.Error(), UniqueConstraintFaileErrorMessage) {
+			http.Error(w, StatusConflictMessage, http.StatusConflict)
+			return
+		} else {
+			http.Error(w, StatusInternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
 	}
 
-	if result.Error != nil {
-		http.Error(w, StatusInternalServerErrorMessage, http.StatusInternalServerError)
-		return
-	}
+	w.WriteHeader(http.StatusCreated)
 }
 
 func (app *App) DeleteBookHandler(w http.ResponseWriter, r *http.Request) {

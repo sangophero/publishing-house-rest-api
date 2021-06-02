@@ -31,13 +31,9 @@ func verifyISBN(isbn string) bool {
 	default:
 		return false
 	case ISBNType10:
-		if !govalidator.IsISBN10(isbn) {
-			return false
-		}
+		return govalidator.IsISBN10(isbn)
 	case ISBNType13:
-		if !govalidator.IsISBN13(isbn) {
-			return false
-		}
+		return govalidator.IsISBN13(isbn)
 	}
 	return true
 }
